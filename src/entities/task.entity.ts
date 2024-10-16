@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
-import { User } from "src/user/user.entity";
+import { User } from "./user.entity";
 
 @Entity()
 export class Task {

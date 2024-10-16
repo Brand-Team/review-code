@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UnauthorizedException } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './user.entity';
+import { User } from 'src/entities';
 import { SigninDto } from './dto/signin.dto';
 import { CreateUserDto } from './dto/createUser.dto';
 
