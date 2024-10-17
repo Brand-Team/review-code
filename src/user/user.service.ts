@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities';
 import { Repository } from 'typeorm';
-import { SigninDto } from './dto/signin.dto';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/createUser.dto';
 
@@ -25,17 +24,12 @@ export class UserService {
         return this.usersRepository.update(id, user);
     }
 
-    softDelete(id: number): Promise<any> {
-        return this.usersRepository.update(id, {isActive: false});
+    async softDelete(id: number): Promise<any> {
+        await this.usersRepository.update(id, {isActive: false});
+        return this.findOne(id);
     }
 
-    /* ----------------------------------------------------------------------------------------------------------------------------
-    
-        15/10/2024 - API login to admin
-        
-    -------------------------------------------------------------------------------------------------------------------------------*/
-
-    // Create user
+    // Old Create user function
     async create(createUser: CreateUserDto): Promise<User> {
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(createUser.password, salt);
@@ -47,15 +41,16 @@ export class UserService {
         });
     }
 
-    // Admin login
-    async loginAdmin(loginDto: SigninDto): Promise<User | null> {
-        const { email, password } = loginDto;
-        const user = await this.usersRepository.findOne({where: {email, isAdmin: true}});
+//     // Create user
+//     createUser(createUser: CreateUserDto): Promise<User> {
+//         return this.usersRepository.save({
+//             ...createUser,
+//             isAdmin: createUser.isAdmin ?? false,
+//         })
+//     }
 
-        if (user && (await bcrypt.compare(password, user.password))) {
-            return user;
-        }
-
-        return null;
-    }
+//     // Edit user
+//     editUser(id: number, editUser: EditUserDto): Promise<any> {
+//         return this.usersRepository.update(id, editUser);
+//     }
 }

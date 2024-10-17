@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from 'src/entities';
 import { SigninDto } from './dto/signin.dto';
 import { CreateUserDto } from './dto/createUser.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('user')
 export class UserController {
@@ -23,34 +25,22 @@ export class UserController {
         return this.usersService.update(id, user);
     }
 
-    @Delete('id')
+    @Delete(':id')
     delete(@Param('id') id: number): Promise<any> {
         return this.usersService.softDelete(id)
     }
 
-    /* ----------------------------------------------------------------------------------------------------------------------------
-    
-        15/10/2024 - API login to admin
-        
-    -------------------------------------------------------------------------------------------------------------------------------*/
+    // // Create user
+    // @Post('createuser')
+    // @UseGuards(JwtAuthGuard, AdminGuard)
+    // async createuser(@Body() createUser: CreateUserDto): Promise<User> {
+    //     return this.usersService.createUser(createUser);
+    // }
 
-    // Create user
-    @Post('signup')
-    async create(@Body() createUser: CreateUserDto): Promise<User> {
-        return this.usersService.create(createUser);
-    }
-
-    // Admin login
-    @Post('login')
-    async login(@Body() signinInfo: SigninDto): Promise<string> {
-        const user = await this.usersService.loginAdmin(signinInfo);
-
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-
-        return `Welcome, admin ${user.username}`;
-    }
-
-
+    // // Edit user
+    // @Post('edituser')
+    // @UseGuards(JwtAuthGuard, AdminGuard)
+    // async edituser(@Param('id') id: number, @Body() editUser: EditUserDto): Promise<User> {
+    //     return this.usersService.editUser(editUser)
+    // }
 }
