@@ -14,15 +14,15 @@ export class AuthService {
         private jwtService: JwtService
     ) {}
 
-    async validateUser({username, password}: AuthPayloadDto) {
+  async validateUser({ email, password }: AuthPayloadDto) {
 
         const findUser = await this.usersRepository.findOne({
-            where: {username}
+          where: { email }
         })
 
         if (!findUser) return null;
 
-        if (password === findUser.password) {
+    if (password === findUser.password) {
             const { password, ...user } = findUser;
             console.log(this.jwtService.sign(user))
             return this.jwtService.sign(user);

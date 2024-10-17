@@ -1,7 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from 'src/entities';
-import { SigninDto } from './dto/signin.dto';
 import { CreateUserDto } from './dto/createUser.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
@@ -30,17 +29,37 @@ export class UserController {
         return this.usersService.softDelete(id)
     }
 
-    // // Create user
-    // @Post('createuser')
-    // @UseGuards(JwtAuthGuard, AdminGuard)
-    // async createuser(@Body() createUser: CreateUserDto): Promise<User> {
-    //     return this.usersService.createUser(createUser);
-    // }
+  // Create user
+  @Post('createuser')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async createuser(@Body() createUser: CreateUserDto): Promise<User> {
+    return this.usersService.createUser(createUser);
+  }
 
-    // // Edit user
-    // @Post('edituser')
-    // @UseGuards(JwtAuthGuard, AdminGuard)
-    // async edituser(@Param('id') id: number, @Body() editUser: EditUserDto): Promise<User> {
-    //     return this.usersService.editUser(editUser)
-    // }
+  // Edit user
+  @Patch('edituser/:id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async edituser(@Param('id') id: number, @Body() editUser: Partial<CreateUserDto>): Promise<User> {
+    return this.usersService.editUser(id, editUser)
+  }
+
+  // Delete user
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  deleteuser(@Param('id') id: number): Promise<any> {
+    return this.usersService.softDelete(id);
+  }
+
+  // Show users list
+  @Get('findall')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async getUsers(
+    @Query('username') username?: string,
+    @Query('email') email?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ): Promise<{ users: User[]; total: number }> {
+    const result = this.usersService.findAll(username, email, page, limit);
+    return result;
+  }
 }

@@ -1,10 +1,10 @@
 import { DataSource, DataSourceOptions } from "typeorm";
 
 export const dataSourceOptions: DataSourceOptions = {
-  type: 'mysql',
+  type: 'mariadb',
   host: 'localhost',
-  username: 'root',
-  password: 'phKt290221',
+  username: 'khoi',
+  password: '1',
   port: 3307,
   database: 'intern',
   entities: ['dist/src/entities/*.entity.js'],

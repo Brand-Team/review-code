@@ -13,37 +13,25 @@ export class AuthController {
     @Post('login')
     @UseGuards(LocalGuard)
     login(@Req() req: Request) {
-        console.log('Inside AuthController login method');
+      console.log('Inside AuthController login method');
 
-        const user = req.user;
+      console.log(req.user);
 
-        // Check if user is a string and parse it to JSON if necessary
-        let userJson;
-        if (typeof user === 'string') {
-            try {
-                userJson = JSON.parse(user); // Convert string to JSON
-            } catch (error) {
-                console.error('Failed to parse user string:', error);
-                return { error: 'Failed to parse user data.' }; // Handle parsing error
-            }
-        } else {
-            userJson = user; // If already an object, just assign it
-        }
-
-        return userJson; // Return the user as a JSON object
+      return { JWT: req.user };
     }
 
     @Get('user')
     @UseGuards(JwtAuthGuard, UserGuard)
     status(@Req() req: Request) {
         console.log('Inside AuthController status method');
-        //console.log(req.user);
-       // return req.user;
+      console.log(req.user);
+      return { message: 'Welcome, user' };
     }
 
     @Get('admin')
     @UseGuards(JwtAuthGuard, AdminGuard)
     adminLogin(@Req() req: Request) {
+      console.log(req.user);
         return { message: 'Welcome, admin'};
     }
 }

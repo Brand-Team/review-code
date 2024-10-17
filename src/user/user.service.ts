@@ -12,10 +12,6 @@ export class UserService {
         private usersRepository: Repository<User>,
     ) {}
 
-    findAll(): Promise<User[]> {
-        return this.usersRepository.find();
-    }
-
     findOne(id: number): Promise<User | null> {
         return this.usersRepository.findOneBy({id})
     }
@@ -24,10 +20,7 @@ export class UserService {
         return this.usersRepository.update(id, user);
     }
 
-    async softDelete(id: number): Promise<any> {
-        await this.usersRepository.update(id, {isActive: false});
-        return this.findOne(id);
-    }
+
 
     // Old Create user function
     async create(createUser: CreateUserDto): Promise<User> {
@@ -41,16 +34,49 @@ export class UserService {
         });
     }
 
-//     // Create user
-//     createUser(createUser: CreateUserDto): Promise<User> {
-//         return this.usersRepository.save({
-//             ...createUser,
-//             isAdmin: createUser.isAdmin ?? false,
-//         })
-//     }
+  // Create user
+  createUser(createUser: CreateUserDto): Promise<User> {
+    return this.usersRepository.save({
+      ...createUser,
+      isAdmin: createUser.isAdmin ?? false,
+    })
+  }
 
-//     // Edit user
-//     editUser(id: number, editUser: EditUserDto): Promise<any> {
-//         return this.usersRepository.update(id, editUser);
-//     }
+  // Edit user
+  async editUser(id: number, editUser: Partial<CreateUserDto>): Promise<any> {
+    await this.usersRepository.update(id, editUser);
+    return this.usersRepository.findOneBy({ id });
+  }
+
+  // Delete user
+  async softDelete(id: number): Promise<any> {
+    await this.usersRepository.update(id, { isActive: false });
+    return this.usersRepository.findOneBy({ id });
+  }
+
+  // Show users list
+  async findAll(
+    username?: string,
+    email?: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ users: User[]; total: number }> {
+
+    const queryBuilder = this.usersRepository.createQueryBuilder('user');
+
+    if (username) {
+      queryBuilder.andWhere('user.username LIKE :username', { username: `%${username}%` });
+    }
+
+    if (email) {
+      queryBuilder.andWhere('user.email LIKE :email', { email: `%${email}%` });
+    }
+
+    const [users, total] = await queryBuilder
+      .skip((page - 1) * limit) // Calculate how many records to skip based on the page number
+      .take(limit) // Limit the number of records to return
+      .getManyAndCount(); // Fetch the users and the total count
+
+    return { users, total }; // Return both users and total count for pagination
+  }
 }
