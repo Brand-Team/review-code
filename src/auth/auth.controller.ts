@@ -13,25 +13,27 @@ export class AuthController {
     @Post('login')
     @UseGuards(LocalGuard)
     login(@Req() req: Request) {
-      console.log('Inside AuthController login method');
-
-      console.log(req.user);
-
-      return { JWT: req.user };
+        console.log('Inside AuthController login method');
+        return { JWT: req.user };
     }
 
     @Get('user')
     @UseGuards(JwtAuthGuard, UserGuard)
     status(@Req() req: Request) {
         console.log('Inside AuthController status method');
-      console.log(req.user);
-      return { message: 'Welcome, user' };
+        console.log(req.user);
+        return {
+            message: 'Welcome, user',
+            payload: req.user
+        };
     }
 
     @Get('admin')
     @UseGuards(JwtAuthGuard, AdminGuard)
     adminLogin(@Req() req: Request) {
-      console.log(req.user);
-        return { message: 'Welcome, admin'};
+        return { 
+            message: 'Welcome, admin',
+            payload: req.user
+        };
     }
 }

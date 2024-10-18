@@ -1,4 +1,4 @@
 export class AuthPayloadDto {
-  email: string;
+    email: string;
     password: string;
 }
