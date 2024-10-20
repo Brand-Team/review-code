@@ -13,7 +13,10 @@ export class TaskService {
 
     // Find task based on id
     findOne(id: number): Promise<Task> {
-        return this.tasksRepository.findOneBy({ id })
+        return this.tasksRepository.findOne({
+            where: { id },
+            relations: ['user']
+        })
     }
 
     // Create task
