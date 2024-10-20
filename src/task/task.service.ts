@@ -9,7 +9,12 @@ export class TaskService {
     constructor(
         @InjectRepository(Task)
         private tasksRepository: Repository<Task>,
-    ) {}
+    ) { }
+
+    // Find task based on id
+    findOne(id: number): Promise<Task> {
+        return this.tasksRepository.findOneBy({ id })
+    }
 
     // Create task
     createTask(taskData: Partial<CreateTaskDto>, userId: number): Promise<Task> {
@@ -53,12 +58,10 @@ export class TaskService {
 
         const skip = (page - 1) * limit;
 
-        const total = await queryBuilder.getCount();
-
-        const data = await queryBuilder
+        const [data, total] = await queryBuilder
             .skip(skip)
             .take(limit)
-            .getMany();
+            .getManyAndCount();
 
         return {
             data,
@@ -87,12 +90,10 @@ export class TaskService {
 
         const skip = (page - 1) * limit;
 
-        const total = await queryBuilder.getCount();
-
-        const data = await queryBuilder
+        const [data, total] = await queryBuilder
             .skip(skip)
             .take(limit)
-            .getMany();
+            .getManyAndCount();
 
         return {
             data,

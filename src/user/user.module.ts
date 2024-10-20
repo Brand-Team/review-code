@@ -10,4 +10,5 @@ import { User } from 'src/entities';
   providers: [UserService],
   exports: [UserService],
 })
+
 export class UserModule {}

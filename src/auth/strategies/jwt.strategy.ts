@@ -17,3 +17,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         return payload;
     }
 }
+
+// This code just typically extracted, verified and decoded the JWT token, 
+// without further validating it in the validate() method

@@ -6,6 +6,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { CreateTaskDto } from './dto/createTask.dto';
 import { UserGuard } from 'src/auth/guards/user.guard';
+import { OwnerGuard } from 'src/auth/guards/owner.guard';
 
 @Controller('task')
 export class TaskController {
@@ -68,7 +69,7 @@ export class TaskController {
 
     // Edit task
     @Patch('user/:id')
-    @UseGuards(JwtAuthGuard, UserGuard)
+    @UseGuards(JwtAuthGuard, UserGuard, OwnerGuard)
     edittask(@Param('id') id: number, @Body() task: Partial<CreateTaskDto>): Promise<Task> {
         return this.tasksService.editTask(id, task)
     }
