@@ -6,9 +6,9 @@ dotenv.config();
 export const dataSourceOptions: DataSourceOptions = {
   type: 'mysql',
   host: process.env.DB_HOST || 'localhost',
-  username: process.env.DB_USERNAME || 'root',
+    username: process.env.DB_USERNAME || 'khoi',
   password: process.env.DB_PASSWORD || '1',
-  port: parseInt(process.env.DB_PORT) || 3307,
+    port: parseInt(process.env.DB_PORT) || 3307,
   database: process.env.DB_DATABASE || 'intern',
   entities: ['dist/src/entities/*.entity.js'],
   migrations: ['dist/db/migrations/*.js'],
