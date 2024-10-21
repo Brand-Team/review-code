@@ -7,10 +7,19 @@ import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { CreateTaskDto } from './dto/createTask.dto';
 import { UserGuard } from 'src/auth/guards/user.guard';
 import { OwnerGuard } from 'src/auth/guards/owner.guard';
+import { UpdateTaskDto } from './dto/updateTask.dto';
 
 @Controller('task')
 export class TaskController {
     constructor(private tasksService: TaskService) {}
+
+    // Create task
+    @Post('create')
+    @UseGuards(JwtAuthGuard)
+    createTaskAdmin(@Body() task: CreateTaskDto, @Req() req: RequestWithUser): Promise<Task> {
+        const ownerId = req.user.id;
+        return this.tasksService.createTask(task, ownerId);
+    }
 
      /* ------------------------------------------------------------------------------------------------------------------------
 
@@ -18,19 +27,10 @@ export class TaskController {
 
       ------------------------------------------------------------------------------------------------------------------------ */
 
-    // Create task
-    @Post('admin/create')
-    @UseGuards(JwtAuthGuard, AdminGuard)
-    createTaskAdmin(@Body() task: Partial<CreateTaskDto>, @Req() req: RequestWithUser): Promise<Task> {
-        const userId = req.user.id;
-        console.log(userId);
-        return this.tasksService.createTask(task, userId);
-    }
-
     // Edit task
     @Patch('admin/:id')
     @UseGuards(JwtAuthGuard, AdminGuard)
-    editTaskAdmin(@Param('id') id: number, @Body() task: Partial<CreateTaskDto>): Promise<Task> {
+    editTaskAdmin(@Param('id') id: number, @Body() task: UpdateTaskDto): Promise<Object> {
         return this.tasksService.editTask(id, task)
     }
 
@@ -58,41 +58,46 @@ export class TaskController {
 
       ------------------------------------------------------------------------------------------------------------------------ */
 
-    // Create task
-    @Post('user/create')
-    @UseGuards(JwtAuthGuard, UserGuard)
-    createtask(@Body() task: Partial<CreateTaskDto>, @Req() req: RequestWithUser): Promise<Task> {
-        const userId = req.user.id;
-        console.log(userId);
-        return this.tasksService.createTask(task, userId);
-    }
-
     // Edit task
     @Patch('user/:id')
     @UseGuards(JwtAuthGuard, UserGuard, OwnerGuard)
-    edittask(@Param('id') id: number, @Body() task: Partial<CreateTaskDto>): Promise<Task> {
+    edittask(@Param('id') id: number, @Body() task: UpdateTaskDto): Promise<Object> {
         return this.tasksService.editTask(id, task)
     }
 
     // Delete task
     @Delete('user/:id')
-    @UseGuards(JwtAuthGuard, UserGuard)
+    @UseGuards(JwtAuthGuard, UserGuard, OwnerGuard)
     deletetask(@Param('id') id: number): Promise<any> {
         return this.tasksService.deleteTask(id)
     }
 
-    // Show tasks list
-    @Get('user/findall')
+    // Show owned tasks list
+    @Get('user/findownedtasks')
     @UseGuards(JwtAuthGuard, UserGuard)
-    findall(
+    findownedtask(
         @Req() req: RequestWithUser,
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 10,
         @Query('title') title?: string,   
     ) {
-        const userId = req.user.id;
+        const id = req.user.id;
 
-        return this.tasksService.findAssignTask(userId, page, limit, title);
+        return this.tasksService.findTask(id, true, page, limit, title);
+    }
+
+    // Show assigned tasks list
+    @Get('user/findassignedtasks')
+    @UseGuards(JwtAuthGuard, UserGuard)
+    findassignedtask(
+        @Req() req: RequestWithUser,
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 10,
+        @Query('title') title?: string,   
+    ) {
+        const id = req.user.id;
+
+        return this.tasksService.findTask(id, false, page, limit, title);
     }
 
 }

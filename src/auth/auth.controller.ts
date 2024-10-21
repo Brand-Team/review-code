@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalGuard } from './guards/local.guard';
 import { Request } from 'express';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { AdminGuard } from './guards/admin.guard';
 import { UserGuard } from './guards/user.guard';
+import { ResponseInterceptor } from 'src/interceptors/response.interceptor';
 
 @Controller('auth')
 export class AuthController {
@@ -14,16 +15,15 @@ export class AuthController {
     @UseGuards(LocalGuard)
     login(@Req() req: Request) {
         console.log('Inside AuthController login method');
-        return { JWT: req.user };
+        return { yourJWT: req.user };
     }
 
     @Get('user')
     @UseGuards(JwtAuthGuard, UserGuard)
     status(@Req() req: Request) {
         console.log('Inside AuthController status method');
-        console.log(req.user);
         return {
-            message: 'Welcome, user',
+            welcome: 'user',
             payload: req.user
         };
     }
@@ -32,7 +32,7 @@ export class AuthController {
     @UseGuards(JwtAuthGuard, AdminGuard)
     adminLogin(@Req() req: Request) {
         return { 
-            message: 'Welcome, admin',
+            welcome: 'admin',
             payload: req.user
         };
     }

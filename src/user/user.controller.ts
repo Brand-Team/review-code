@@ -1,4 +1,4 @@
-import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from 'src/entities';
 import { CreateUserDto } from './dto/createUser.dto';
@@ -14,15 +14,15 @@ export class UserController {
     // Create user
     @Post('admin/createuser')
     @UseGuards(JwtAuthGuard, AdminGuard)
-    createuser(@Body() user: CreateUserDto): Promise<User> {
-        return this.usersService.createUser(user);
+    createuser(@Body() inputUser: CreateUserDto): Promise<Object> {
+        return this.usersService.createUser(inputUser);
     }
 
     // Edit user
     @Patch('admin/:id')
     @UseGuards(JwtAuthGuard, AdminGuard)
-    edituser(@Param('id') id: number, @Body() user: Partial<CreateUserDto>): Promise<User> {
-        return this.usersService.editUser(id, user)
+    edituser(@Param('id') id: number, @Body() editUser: Partial<CreateUserDto>): Promise<User> {
+        return this.usersService.editUser(id, editUser)
     }
 
     // Delete user

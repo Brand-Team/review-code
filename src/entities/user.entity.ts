@@ -22,5 +22,8 @@ export class User {
     isAdmin: boolean;
 
     @OneToMany(() => Task, (task) => task.user)
-    tasks: Task[]
+    assignedTasks: Task[]
+
+    @OneToMany(() => Task, (task) => task.owner)
+    ownedTask: Task[]
 }

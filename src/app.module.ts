@@ -4,6 +4,8 @@ import { dataSourceOptions } from "db/data-source";
 import { UserModule } from "./user/user.module";
 import { TaskModule } from "./task/task.module";
 import { AuthModule } from './auth/auth.module';
+import { APP_INTERCEPTOR } from "@nestjs/core";
+import { ResponseInterceptor } from "./interceptors/response.interceptor";
 
 @Module({
   imports: [
@@ -12,6 +14,12 @@ import { AuthModule } from './auth/auth.module';
     TaskModule,
     AuthModule,
   ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor
+    }
+  ]
 })
 
 export class AppModule {}

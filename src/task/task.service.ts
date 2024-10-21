@@ -3,6 +3,7 @@ import { Task } from 'src/entities';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTaskDto } from './dto/createTask.dto';
+import { UpdateTaskDto } from './dto/updateTask.dto';
 
 @Injectable()
 export class TaskService {
@@ -15,23 +16,46 @@ export class TaskService {
     findOne(id: number): Promise<Task> {
         return this.tasksRepository.findOne({
             where: { id },
-            relations: ['user']
+            relations: ['user', 'owner'],
         })
     }
 
     // Create task
-    createTask(taskData: Partial<CreateTaskDto>, userId: number): Promise<Task> {
+    createTask(taskData: CreateTaskDto, ownerId: number): Promise<Task> {
         const task = this.tasksRepository.create(taskData);
 
-        task.user = { id: userId } as any;
+        task.owner = { id: ownerId } as any;
+
+        task.user =  {id: taskData.assignedUserId} as any;
 
         return this.tasksRepository.save(task);
     }
 
     // Edit task
-    async editTask(id: number, taskData: Partial<CreateTaskDto>): Promise<Task> {
+    async editTask(id: number, taskData: UpdateTaskDto): Promise<Object> {
         await this.tasksRepository.update(id, taskData)
-        return this.tasksRepository.findOneBy({id})
+        
+        try {
+            const task = await this.tasksRepository.findOne({
+                where: { id },
+                relations: ['user', 'owner'],
+            })
+
+            return {
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                completed: task.completed,
+                user: {
+                    id: task.user.id,
+                },
+                owner: {
+                    id: task.owner.id,
+                },
+            };
+        } catch {
+            throw new NotFoundException(`Task with ID ${id} not found`);
+        }
     }
 
     // Delete task
@@ -50,7 +74,7 @@ export class TaskService {
         page: number = 1,
         limit: number = 10,
         title?: string
-    ): Promise<{data: Task[]; total: number; page: number; totalPages: number}> {
+    ): Promise<{tasks: Task[]; total: number; page: number; totalPages: number}> {
         const queryBuilder = this.tasksRepository.createQueryBuilder('task');
 
         if (title) {
@@ -61,29 +85,37 @@ export class TaskService {
 
         const skip = (page - 1) * limit;
 
-        const [data, total] = await queryBuilder
+        const [tasks, total] = await queryBuilder
             .skip(skip)
             .take(limit)
             .getManyAndCount();
 
         return {
-            data,
+            tasks,
             total,
             page,
             totalPages: Math.ceil(total / limit)
         }
     }
 
-    // Show assign task
-    async findAssignTask(
-        userId: number,
+    // Show owned/asssigned task
+    async findTask(
+        id: number,
+        findOwnedTasks: boolean,
         page: number = 1,
         limit: number = 10,
         title?: string
-    ): Promise<{data: Task[]; total: number; page: number; totalPages: number}> {
+    ): Promise<{tasks: Task[]; userInfo: string; total: number; page: number; totalPages: number}> {
         const queryBuilder = this.tasksRepository.createQueryBuilder('task');
+        let userInfo: string;
 
-        queryBuilder.where('task.userId = :userId', {userId});
+        if (findOwnedTasks) {
+            userInfo = `owned by user ${id}`;
+            queryBuilder.where('task.ownerId = :id', {id})
+        } else {
+            userInfo = `assigned to user ${id}`;
+            queryBuilder.where('task.userId = :id', {id})
+        }
 
         if (title) {
             queryBuilder.andWhere('task.title ILIKE :title', {
@@ -93,13 +125,14 @@ export class TaskService {
 
         const skip = (page - 1) * limit;
 
-        const [data, total] = await queryBuilder
+        const [tasks, total] = await queryBuilder
             .skip(skip)
             .take(limit)
             .getManyAndCount();
 
         return {
-            data,
+            tasks,
+            userInfo,
             total,
             page,
             totalPages: Math.ceil(total / limit)

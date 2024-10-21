@@ -15,6 +15,9 @@ export class Task {
     @Column({default: false})
     completed: boolean;
 
-    @ManyToOne(() => User, (user) => user.tasks)
+    @ManyToOne(() => User, (user) => user.assignedTasks)
     user: User;
+
+    @ManyToOne(() => User, (user) => user.ownedTask)
+    owner: User;
 }

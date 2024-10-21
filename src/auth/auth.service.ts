@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthPayloadDto } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -14,20 +15,21 @@ export class AuthService {
         private jwtService: JwtService
     ) {}
 
-    async validateUser({email, password}: AuthPayloadDto) {
+    async validateUser({inputEmail, password}: AuthPayloadDto) {
 
         const findUser = await this.usersRepository.findOne({
-            where: {email}
+            where: {email: inputEmail}
         })
 
         if (!findUser) return null;
 
-        if (password === findUser.password) {
+        const isPasswordValid = await bcrypt.compare(password, findUser.password);
 
-            const {id, email, username, isAdmin } = findUser;
-            const payload = { id, email, username, isAdmin};
+        if (!isPasswordValid) throw new UnauthorizedException('Invalid password')
 
-            return this.jwtService.sign(payload);
-        }
+        const { id, email, username, isAdmin } = findUser;
+        const payload = { id, email, username, isAdmin };
+
+        return this.jwtService.sign(payload);
     }
 }
