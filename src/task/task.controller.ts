@@ -45,11 +45,15 @@ export class TaskController {
     @Get('admin/findall')
     @UseGuards(JwtAuthGuard, AdminGuard)
     findallAdmin(
-        @Query('page') page: number = 1,
-        @Query('limit') limit: number = 10,
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10',
         @Query('title') title?: string
     ) {
-        return this.tasksService.findAll(page, limit, title);
+
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+
+        return this.tasksService.findAll(pageNumber, limitNumber, title);
     }
 
     /* ------------------------------------------------------------------------------------------------------------------------

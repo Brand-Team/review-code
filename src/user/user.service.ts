@@ -86,16 +86,18 @@ export class UserService {
     ): Promise<{users: {id: number; username: string; email: string; isAdmin: boolean}[]; total: number; page: number; totalPages: number}> {
         const queryBuilder = this.usersRepository.createQueryBuilder('user');
 
-        queryBuilder.select(['user.id', 'user.username', 'user.email', 'user.isAdmin'])
+        queryBuilder
+            .select(['user.id', 'user.username', 'user.email', 'user.isAdmin'])
+            .where('user.isActive = :isActive', { isActive: true });
 
         if (username) {
-            queryBuilder.andWhere('user.username ILIKE :username', {
+            queryBuilder.andWhere('user.username LIKE :username', {
                 username: `%${username}%`
             });
         }
 
         if (email) {
-            queryBuilder.andWhere('user.email ILIKE :email', {
+            queryBuilder.andWhere('user.email LIKE :email', {
                 email: `%${email}%`
             });
         }
