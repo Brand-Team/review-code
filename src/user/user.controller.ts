@@ -9,7 +9,11 @@ import { AdminGuard } from 'src/auth/guards/admin.guard';
 export class UserController {
     constructor(private usersService: UserService) {}
 
-    /* Admin */
+    /* ------------------------------------------------------------------------------------------------------------------------
+
+        Admin 
+
+      ------------------------------------------------------------------------------------------------------------------------ */
 
     // Create user
     @Post('admin/createuser')
