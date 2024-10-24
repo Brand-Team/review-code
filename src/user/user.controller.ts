@@ -40,12 +40,15 @@ export class UserController {
     @Get('admin/findall')
     @UseGuards(JwtAuthGuard, AdminGuard)
     findall(
-        @Query('page') page: number = 1,
-        @Query('limit') limit: number = 10,
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10',
         @Query('username') username?: string,
         @Query('email') email?: string,
     ) {
-        return this.usersService.findAll(page, limit, username, email);
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+
+        return this.usersService.findAll(pageNumber, limitNumber, username, email);
     }
 
 }

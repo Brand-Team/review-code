@@ -81,13 +81,16 @@ export class TaskController {
     @UseGuards(JwtAuthGuard, UserGuard)
     findownedtask(
         @Req() req: RequestWithUser,
-        @Query('page') page: number = 1,
-        @Query('limit') limit: number = 10,
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10',
         @Query('title') title?: string,   
     ) {
         const id = req.user.id;
 
-        return this.tasksService.findTask(id, true, page, limit, title);
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+
+        return this.tasksService.findTask(id, true, pageNumber, limitNumber, title);
     }
 
     // Show assigned tasks list
@@ -95,13 +98,18 @@ export class TaskController {
     @UseGuards(JwtAuthGuard, UserGuard)
     findassignedtask(
         @Req() req: RequestWithUser,
-        @Query('page') page: number = 1,
-        @Query('limit') limit: number = 10,
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10',
         @Query('title') title?: string,   
     ) {
         const id = req.user.id;
 
-        return this.tasksService.findTask(id, false, page, limit, title);
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+
+        console.log(id)
+
+        return this.tasksService.findTask(id, false, pageNumber, limitNumber, title);
     }
 
 }

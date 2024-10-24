@@ -108,7 +108,10 @@ export class TaskService {
         limit: number = 10,
         title?: string
     ): Promise<{tasks: Task[]; userInfo: string; total: number; page: number; totalPages: number}> {
-        const queryBuilder = this.tasksRepository.createQueryBuilder('task');
+        const queryBuilder = this.tasksRepository.createQueryBuilder('task')
+            .leftJoinAndSelect('task.user', 'user')
+            .leftJoinAndSelect('task.owner', 'owner');
+        
         let userInfo: string;
 
         if (findOwnedTasks) {
@@ -120,7 +123,7 @@ export class TaskService {
         }
 
         if (title) {
-            queryBuilder.andWhere('task.title ILIKE :title', {
+            queryBuilder.andWhere('task.title LIKE :title', {
                 title: `%${title}%`
             });
         }
