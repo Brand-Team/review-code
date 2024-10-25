@@ -15,20 +15,20 @@ export class AuthService {
         private jwtService: JwtService
     ) {}
 
-    async validateUser({inputEmail, password}: AuthPayloadDto) {
+    async validateUser({email, password}: AuthPayloadDto) {
 
         const findUser = await this.usersRepository.findOne({
-            where: {email: inputEmail}
+            where: {email}
         })
 
-        if (!findUser) return null;
+        if (!findUser) throw new UnauthorizedException('No such user');
 
         const isPasswordValid = await bcrypt.compare(password, findUser.password);
 
         if (!isPasswordValid) throw new UnauthorizedException('Invalid password')
 
-        const { id, email, username, isAdmin } = findUser;
-        const payload = { id, email, username, isAdmin };
+        const { id, email: useremail, username, isAdmin } = findUser;
+        const payload = { id, useremail, username, isAdmin };
 
         return this.jwtService.sign(payload);
     }

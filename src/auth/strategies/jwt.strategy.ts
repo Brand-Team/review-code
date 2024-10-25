@@ -1,6 +1,7 @@
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy, ExtractJwt } from "passport-jwt";
 import { JWT_SECRET } from "../constants";
+import { UnauthorizedException } from "@nestjs/common";
 
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor() {
@@ -14,6 +15,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     validate(payload: any) {
         console.log('Inside JWT strategy validate');
         console.log(payload);
+        if (!payload) {
+            throw new UnauthorizedException('Invalid JWT payload');
+        }
         return payload;
     }
 }

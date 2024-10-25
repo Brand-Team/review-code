@@ -1,11 +1,9 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
+import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { TaskService } from "src/task/task.service";
 
 @Injectable()
 export class OwnerGuard implements CanActivate {
     constructor(
-        private reflector: Reflector,
         private readonly taskService: TaskService,
     ) { }
 
@@ -23,6 +21,6 @@ export class OwnerGuard implements CanActivate {
             return true;
         }
 
-        throw new ForbiddenException('You do not have access to this task');
+        throw new HttpException('You do not have access to this task', HttpStatus.FORBIDDEN);
     }
 }

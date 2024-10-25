@@ -35,7 +35,7 @@ export class UserService {
                 throw new ConflictException('Email already exists')
             };
 
-            throw new InternalServerErrorException();
+            throw new ConflictException('password');
         }
     }
 
