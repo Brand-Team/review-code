@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities';
 import { Repository } from 'typeorm';
@@ -18,24 +18,22 @@ export class UserService {
         const hashedPassword = await bcrypt.hash(inputUser.password, salt);
 
         try {
-            const user = await this.usersRepository.save({
-                ...inputUser,
-                password: hashedPassword,
-                isAdmin: inputUser.isAdmin ?? false,
-            })
-    
-            return {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                isAdmin: user.isAdmin
-            }
-        } catch (error) {
-            if (error.code === 'ER_DUP_ENTRY') {
-                throw new ConflictException('Email already exists')
-            };
+          const user = await this.usersRepository.save({
+            ...inputUser,
+            password: hashedPassword,
+            isAdmin: inputUser.isAdmin ?? false,
+          })
 
-            throw new ConflictException('password');
+          return {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            isAdmin: user.isAdmin
+          }
+        } catch (error) {
+          if (error.code === 'ER_DUP_ENTRY') {
+            throw new ConflictException('Email already exists')
+          };
         }
     }
 
@@ -60,22 +58,30 @@ export class UserService {
         } catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
                 throw new ConflictException('Email already exists')
-            };
+          };
+
+          throw new NotFoundException('Cannot find ID')
         }
     }
 
     // Delete user
-    async softDelete(id: number): Promise<any> {
-        await this.usersRepository.update(id, { isActive: false });
-        const user = await this.usersRepository.findOneBy({ id });
+  async softDelete(id: number): Promise<any> {
 
-        return {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            isAdmin: user.isAdmin
-        } 
+    await this.usersRepository.update(id, { isActive: false });
+
+    try {
+      const user = await this.usersRepository.findOneBy({ id });
+
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        isAdmin: user.isAdmin
+      } 
+    } catch (error) {
+      throw new NotFoundException('Cannot find ID')
     }
+  }
 
     // Show users list
     async findAll(

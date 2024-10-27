@@ -40,8 +40,8 @@ export class UserController {
     @ApiResponse({ status: 400, description: 'Password does not match requirement'})
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Forbidden.' })
-    @ApiResponse({ status: 409, description: 'Email already exists'})
-    @ApiResponse({ status: 500, description: 'User ID does not exist'})
+    @ApiResponse({ status: 404, description: 'User ID not found.' })
+    @ApiResponse({ status: 409, description: 'Email already exists' })
     @UseGuards(JwtAuthGuard, AdminGuard)
     edituser(@Param('id') id: number, @Body() editUser: Partial<CreateUserDto>): Promise<User> {
         return this.usersService.editUser(id, editUser);
@@ -54,7 +54,7 @@ export class UserController {
     @ApiResponse({ status: 200, description: 'User successfully deleted' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Forbidden.' })
-    @ApiResponse({ status: 500, description: 'User ID does not exist'})
+    @ApiResponse({ status: 404, description: 'User ID not found.' })
     @UseGuards(JwtAuthGuard, AdminGuard)
     deleteuser(@Param('id') id: number): Promise<any> {
         return this.usersService.softDelete(id);

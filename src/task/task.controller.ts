@@ -8,7 +8,7 @@ import { CreateTaskDto } from './dto/createTask.dto';
 import { UserGuard } from 'src/auth/guards/user.guard';
 import { OwnerGuard } from 'src/auth/guards/owner.guard';
 import { UpdateTaskDto } from './dto/updateTask.dto';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Task')
 @Controller('task')

@@ -5,7 +5,9 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { CustomExceptionFilter } from './filters/custom-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn']
+  });
   const httpAdapterHost = app.get(HttpAdapterHost)
 
   app.useGlobalPipes(new ValidationPipe({

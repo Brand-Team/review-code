@@ -6,11 +6,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { isArray } from 'class-validator';
 import * as moment from 'moment';
 
 @Catch()
 export class CustomExceptionFilter implements ExceptionFilter {
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
+  constructor(private readonly httpAdapterHost: HttpAdapterHost) { }
 
   catch(exception: any, host: ArgumentsHost): void {
     const { httpAdapter } = this.httpAdapterHost;
@@ -23,37 +24,36 @@ export class CustomExceptionFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
-    
-    // if (Array.isArray(exception.message)) {
-    //   console.log(); // Join array elements if needed
-    // } else {
-    //   console.log(exception.message);
-    // }
+
+    let exceptionMessage: string;
+
     const { response: res } = exception;
-    const [message] = res?.message;
-    console.log(res?.message)
 
-    const exceptionMessage =
-      exception.message || 'An unexpected error occurred';
+    if (isArray(exception?.response?.message)) {
+      const [message] = res?.message;
+      exceptionMessage = message
+    } else if (exception?.response?.message) {
+      exceptionMessage = exception.response.message
+    } else {
+      exceptionMessage = exception.response
+    }
 
-    // Format datetime - file - line - input<Optional> - exception_message
-    const datetime = moment().format('YYYY-MM-DD HH:mm:ss');
-    const file = exception.stack ? exception.stack.split('\n')[1].trim() : 'unknown';
-    const line = exception.stack ? exception.stack.split('\n')[2].trim() : 'unknown';
-    const input = request.body || {};
+    console.log(exception)
 
-    const formattedLog = `${datetime} - ${file} - ${line} - input: ${JSON.stringify(
-      input,
-    )} - exception_message: ${exceptionMessage}`;
-
-    // console.error(formattedLog);
+    const formattedLog = {
+      datetime: moment().format('YYYY-MM-DD HH:mm:ss'),
+      file: exception.stack ? exception.stack.split('\n')[1].trim() : 'unknown',
+      line: exception.stack ? exception.stack.split('\n')[2].trim() : 'unknown',
+      input: request.body ? request.body : {},
+      message: exceptionMessage,
+    };
 
     // Respond to the client with a generic error message
     httpAdapter.reply(
       response,
       {
         statusCode,
-        error: message
+        error: formattedLog
       },
       statusCode,
     );

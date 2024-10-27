@@ -14,10 +14,14 @@ export class TaskService {
 
     // Find task based on id
     findOne(id: number): Promise<Task> {
+      try {
         return this.tasksRepository.findOne({
-            where: { id },
-            relations: ['user', 'owner'],
+          where: { id },
+          relations: ['user', 'owner'],
         })
+      } catch (error) {
+        throw new NotFoundException('Cannot find ID')
+      }
     }
 
     // Create task
@@ -60,13 +64,17 @@ export class TaskService {
 
     // Delete task
     async deleteTask(id: number): Promise<any> {
+      try {
         const result = await this.tasksRepository.delete(id);
 
         if (result.affected === 0) {
-            throw new NotFoundException(`Task with ID ${id} not found`);
+          throw new NotFoundException(`Task with ID ${id} not found`);
         }
 
         return { message: `Task with ID ${id} has been successfully deleted.` };
+      } catch (error) {
+        throw new NotFoundException(`Task with ID ${id} not found`);
+      }
     }
 
     // Show all tasks
