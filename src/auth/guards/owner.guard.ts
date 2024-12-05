@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { TaskService } from "src/task/task.service";
+import { TaskService } from "../../task/task.service";
 
 @Injectable()
 export class OwnerGuard implements CanActivate {

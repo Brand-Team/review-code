@@ -1,19 +1,19 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { TaskService } from './task.service';
-import { RequestWithUser } from 'src/auth/types/requestWithUser.interface';
-import { Task } from 'src/entities';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { RequestWithUser } from '../auth/types/requestWithUser.interface';
+import { Task } from '../entities';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { CreateTaskDto } from './dto/createTask.dto';
-import { UserGuard } from 'src/auth/guards/user.guard';
-import { OwnerGuard } from 'src/auth/guards/owner.guard';
+import { UserGuard } from '../auth/guards/user.guard';
+import { OwnerGuard } from '../auth/guards/owner.guard';
 import { UpdateTaskDto } from './dto/updateTask.dto';
 import { ApiBearerAuth, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Task')
 @Controller('task')
 export class TaskController {
-    constructor(private tasksService: TaskService) {}
+    constructor(private tasksService: TaskService) { }
 
     // Create task
     @Post('create')
@@ -26,11 +26,11 @@ export class TaskController {
         return this.tasksService.createTask(task, ownerId);
     }
 
-     /* ------------------------------------------------------------------------------------------------------------------------
+    /* ------------------------------------------------------------------------------------------------------------------------
 
-        Admin 
+       Admin 
 
-      ------------------------------------------------------------------------------------------------------------------------ */
+     ------------------------------------------------------------------------------------------------------------------------ */
 
     // Edit task
     @Patch('admin/:id')
@@ -39,9 +39,9 @@ export class TaskController {
     @ApiResponse({ status: 200, description: 'Task successfully edited' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Forbidden.' })
-    @ApiResponse({ status: 500, description: 'Task ID does not exist'})
+    @ApiResponse({ status: 500, description: 'Task ID does not exist' })
     @UseGuards(JwtAuthGuard, AdminGuard)
-    editTaskAdmin(@Param('id') id: number, @Body() task: UpdateTaskDto): Promise<Object> {
+    editTaskAdmin(@Param('id') id: number, @Body() task: UpdateTaskDto): Promise<Task> {
         return this.tasksService.editTask(id, task)
     }
 
@@ -52,7 +52,7 @@ export class TaskController {
     @ApiResponse({ status: 200, description: 'Task successfully deleted' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Forbidden.' })
-    @ApiResponse({ status: 500, description: 'Task ID does not exist'})
+    @ApiResponse({ status: 500, description: 'Task ID does not exist' })
     @UseGuards(JwtAuthGuard, AdminGuard)
     deleteTaskAdmin(@Param('id') id: number): Promise<any> {
         return this.tasksService.deleteTask(id)
@@ -93,7 +93,7 @@ export class TaskController {
     @ApiResponse({ status: 200, description: 'User successfully edited' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Forbidden.' })
-    @ApiResponse({ status: 500, description: 'Task ID does not exist'})
+    @ApiResponse({ status: 500, description: 'Task ID does not exist' })
     @UseGuards(JwtAuthGuard, UserGuard, OwnerGuard)
     edittask(@Param('id') id: number, @Body() task: UpdateTaskDto): Promise<Object> {
         return this.tasksService.editTask(id, task)
@@ -106,7 +106,7 @@ export class TaskController {
     @ApiResponse({ status: 200, description: 'User successfully deleted' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Forbidden.' })
-    @ApiResponse({ status: 500, description: 'Task ID does not exist'})
+    @ApiResponse({ status: 500, description: 'Task ID does not exist' })
     @UseGuards(JwtAuthGuard, UserGuard, OwnerGuard)
     deletetask(@Param('id') id: number): Promise<any> {
         return this.tasksService.deleteTask(id)
@@ -126,7 +126,7 @@ export class TaskController {
         @Req() req: RequestWithUser,
         @Query('page') page: string = '1',
         @Query('limit') limit: string = '10',
-        @Query('title') title?: string,   
+        @Query('title') title?: string,
     ) {
         const id = req.user.id;
 
@@ -150,7 +150,7 @@ export class TaskController {
         @Req() req: RequestWithUser,
         @Query('page') page: string = '1',
         @Query('limit') limit: string = '10',
-        @Query('title') title?: string,   
+        @Query('title') title?: string,
     ) {
         const id = req.user.id;
 
