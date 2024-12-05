@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Task } from 'src/entities';
+import { Task } from '../entities';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTaskDto } from './dto/createTask.dto';
@@ -7,149 +7,138 @@ import { UpdateTaskDto } from './dto/updateTask.dto';
 
 @Injectable()
 export class TaskService {
-    constructor(
-        @InjectRepository(Task)
-        private tasksRepository: Repository<Task>,
-    ) { }
+  constructor(
+    @InjectRepository(Task)
+    private tasksRepository: Repository<Task>,
+  ) { }
 
-    // Find task based on id
-    findOne(id: number): Promise<Task> {
-      try {
-        return this.tasksRepository.findOne({
-          where: { id },
-          relations: ['user', 'owner'],
-        })
-      } catch (error) {
-        throw new NotFoundException('Cannot find ID')
-      }
+  // Find task based on id
+  findOne(id: number): Promise<Task> {
+    try {
+      return this.tasksRepository.findOne({
+        where: { id },
+        relations: ['user', 'owner'],
+      })
+    } catch (error) {
+      throw new NotFoundException('Cannot find ID')
     }
+  }
 
-    // Create task
-    createTask(taskData: CreateTaskDto, ownerId: number): Promise<Task> {
-        const task = this.tasksRepository.create(taskData);
+  // Create task
+  createTask(taskData: CreateTaskDto, ownerId: number): Promise<Task> {
+    const task = this.tasksRepository.create(taskData);
 
-        task.owner = { id: ownerId } as any;
+    task.owner = { id: ownerId } as any;
 
-        task.user =  {id: taskData.assignedUserId} as any;
+    task.user = { id: taskData.assignedUserId } as any;
 
-        return this.tasksRepository.save(task);
+    return this.tasksRepository.save(task);
+  }
+
+  // Edit task
+  async editTask(id: number, taskData: UpdateTaskDto): Promise<Task> {
+    await this.tasksRepository.update(id, taskData)
+
+    try {
+      const task = await this.tasksRepository.findOne({
+        where: { id },
+        relations: ['user', 'owner'],
+      })
+
+      return task;
+    } catch {
+      throw new NotFoundException(`Task with ID ${id} not found`);
     }
+  }
 
-    // Edit task
-    async editTask(id: number, taskData: UpdateTaskDto): Promise<Object> {
-        await this.tasksRepository.update(id, taskData)
-        
-        try {
-            const task = await this.tasksRepository.findOne({
-                where: { id },
-                relations: ['user', 'owner'],
-            })
+  // Delete task
+  async deleteTask(id: number): Promise<any> {
+    try {
+      const result = await this.tasksRepository.delete(id);
 
-            return {
-                id: task.id,
-                title: task.title,
-                description: task.description,
-                completed: task.completed,
-                user: {
-                    id: task.user.id,
-                },
-                owner: {
-                    id: task.owner.id,
-                },
-            };
-        } catch {
-            throw new NotFoundException(`Task with ID ${id} not found`);
-        }
-    }
-
-    // Delete task
-    async deleteTask(id: number): Promise<any> {
-      try {
-        const result = await this.tasksRepository.delete(id);
-
-        if (result.affected === 0) {
-          throw new NotFoundException(`Task with ID ${id} not found`);
-        }
-
-        return { message: `Task with ID ${id} has been successfully deleted.` };
-      } catch (error) {
+      if (result.affected === 0) {
         throw new NotFoundException(`Task with ID ${id} not found`);
       }
+
+      return { message: `Task with ID ${id} has been successfully deleted.` };
+    } catch (error) {
+      throw new NotFoundException(`Task with ID ${id} not found`);
+    }
+  }
+
+  // Show all tasks
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    title?: string
+  ): Promise<{ tasks: Task[]; total: number; page: number; totalPages: number }> {
+    const queryBuilder = this.tasksRepository.createQueryBuilder('task')
+      .leftJoinAndSelect('task.user', 'user')
+      .leftJoinAndSelect('task.owner', 'owner');
+
+    if (title) {
+      queryBuilder.andWhere('task.title LIKE :title', {
+        title: `%${title}%`
+      });
     }
 
-    // Show all tasks
-    async findAll(
-        page: number = 1,
-        limit: number = 10,
-        title?: string
-    ): Promise<{tasks: Task[]; total: number; page: number; totalPages: number}> {
-        const queryBuilder = this.tasksRepository.createQueryBuilder('task')
-            .leftJoinAndSelect('task.user', 'user')
-            .leftJoinAndSelect('task.owner', 'owner');
+    const skip = (page - 1) * limit;
 
-        if (title) {
-            queryBuilder.andWhere('task.title LIKE :title', {
-                title: `%${title}%`
-            });
-        }
+    const [tasks, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
-        const skip = (page - 1) * limit;
+    return {
+      tasks,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    }
+  }
 
-        const [tasks, total] = await queryBuilder
-            .skip(skip)
-            .take(limit)
-            .getManyAndCount();
+  // Show owned/asssigned task
+  async findTask(
+    id: number,
+    findOwnedTasks: boolean,
+    page: number = 1,
+    limit: number = 10,
+    title?: string
+  ): Promise<{ tasks: Task[]; userInfo: string; total: number; page: number; totalPages: number }> {
+    const queryBuilder = this.tasksRepository.createQueryBuilder('task')
+      .leftJoinAndSelect('task.user', 'user')
+      .leftJoinAndSelect('task.owner', 'owner');
 
-        return {
-            tasks,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit)
-        }
+    let userInfo: string;
+
+    if (findOwnedTasks) {
+      userInfo = `owned by user ${id}`;
+      queryBuilder.where('task.ownerId = :id', { id })
+    } else {
+      userInfo = `assigned to user ${id}`;
+      queryBuilder.where('task.userId = :id', { id })
     }
 
-    // Show owned/asssigned task
-    async findTask(
-        id: number,
-        findOwnedTasks: boolean,
-        page: number = 1,
-        limit: number = 10,
-        title?: string
-    ): Promise<{tasks: Task[]; userInfo: string; total: number; page: number; totalPages: number}> {
-        const queryBuilder = this.tasksRepository.createQueryBuilder('task')
-            .leftJoinAndSelect('task.user', 'user')
-            .leftJoinAndSelect('task.owner', 'owner');
-        
-        let userInfo: string;
-
-        if (findOwnedTasks) {
-            userInfo = `owned by user ${id}`;
-            queryBuilder.where('task.ownerId = :id', {id})
-        } else {
-            userInfo = `assigned to user ${id}`;
-            queryBuilder.where('task.userId = :id', {id})
-        }
-
-        if (title) {
-            queryBuilder.andWhere('task.title LIKE :title', {
-                title: `%${title}%`
-            });
-        }
-
-        const skip = (page - 1) * limit;
-
-        const [tasks, total] = await queryBuilder
-            .skip(skip)
-            .take(limit)
-            .getManyAndCount();
-
-        return {
-            tasks,
-            userInfo,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit)
-        }
+    if (title) {
+      queryBuilder.andWhere('task.title LIKE :title', {
+        title: `%${title}%`
+      });
     }
-    
+
+    const skip = (page - 1) * limit;
+
+    const [tasks, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      tasks,
+      userInfo,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    }
+  }
+
 }

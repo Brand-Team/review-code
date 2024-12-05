@@ -1,70 +1,77 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/entities';
+import { User } from '../entities';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/createUser.dto';
 
+interface UserResponse {
+  id: number;
+  username: string;
+  email: string;
+  isAdmin: boolean;
+}
 @Injectable()
 export class UserService {
-    constructor(
-        @InjectRepository(User)
-        private usersRepository: Repository<User>,
-    ) {}
-    
-    // Create user
-    async createUser(inputUser: CreateUserDto): Promise<Object> {
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(inputUser.password, salt);
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) { }
 
-        try {
-          const user = await this.usersRepository.save({
-            ...inputUser,
-            password: hashedPassword,
-            isAdmin: inputUser.isAdmin ?? false,
-          })
+  // Create user
+  async createUser(inputUser: CreateUserDto): Promise<UserResponse> {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(inputUser.password, salt);
 
-          return {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            isAdmin: user.isAdmin
-          }
-        } catch (error) {
-          if (error.code === 'ER_DUP_ENTRY') {
-            throw new ConflictException('Email already exists')
-          };
-        }
+    try {
+      const user = await this.usersRepository.save({
+        ...inputUser,
+        password: hashedPassword,
+        isAdmin: inputUser.isAdmin ?? false,
+      })
+
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        isAdmin: user.isAdmin
+      }
+    } catch (error) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('Email already exists')
+      };
+      throw new InternalServerErrorException('Failed to process request');
+    }
+  }
+
+  // Edit user
+  async editUser(id: number, editUser: Partial<CreateUserDto>): Promise<any> {
+
+    if (editUser.password) {
+      const salt = await bcrypt.genSalt();
+      editUser.password = await bcrypt.hash(editUser.password, salt);
     }
 
-    // Edit user
-    async editUser(id: number, editUser: Partial<CreateUserDto>): Promise<any> {
+    try {
+      await this.usersRepository.update(id, editUser);
+      const user = await this.usersRepository.findOneBy({ id });
 
-        if (editUser.password) {
-            const salt = await bcrypt.genSalt();
-            editUser.password = await bcrypt.hash(editUser.password, salt);
-        }
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        isAdmin: user.isAdmin
+      }
+    } catch (error) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('Email already exists')
+      };
 
-        try {
-            await this.usersRepository.update(id, editUser);
-            const user = await this.usersRepository.findOneBy({ id });
-
-            return {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                isAdmin: user.isAdmin
-            } 
-        } catch (error) {
-            if (error.code === 'ER_DUP_ENTRY') {
-                throw new ConflictException('Email already exists')
-          };
-
-          throw new NotFoundException('Cannot find ID')
-        }
+      throw new NotFoundException('Cannot find ID')
     }
+  }
 
-    // Delete user
+  // Delete user
   async softDelete(id: number): Promise<any> {
 
     await this.usersRepository.update(id, { isActive: false });
@@ -77,50 +84,50 @@ export class UserService {
         username: user.username,
         email: user.email,
         isAdmin: user.isAdmin
-      } 
+      }
     } catch (error) {
       throw new NotFoundException('Cannot find ID')
     }
   }
 
-    // Show users list
-    async findAll(
-        page: number = 1,
-        limit: number = 10,
-        username?: string,
-        email?: string,
-    ): Promise<{users: {id: number; username: string; email: string; isAdmin: boolean}[]; total: number; page: number; totalPages: number}> {
-        const queryBuilder = this.usersRepository.createQueryBuilder('user');
+  // Show users list
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    username?: string,
+    email?: string,
+  ): Promise<{ users: { id: number; username: string; email: string; isAdmin: boolean }[]; total: number; page: number; totalPages: number }> {
+    const queryBuilder = this.usersRepository.createQueryBuilder('user');
 
-        queryBuilder
-            .select(['user.id', 'user.username', 'user.email', 'user.isAdmin'])
-            .where('user.isActive = :isActive', { isActive: true });
+    queryBuilder
+      .select(['user.id', 'user.username', 'user.email', 'user.isAdmin'])
+      .where('user.isActive = :isActive', { isActive: true });
 
-        if (username) {
-            queryBuilder.andWhere('user.username LIKE :username', {
-                username: `%${username}%`
-            });
-        }
-
-        if (email) {
-            queryBuilder.andWhere('user.email LIKE :email', {
-                email: `%${email}%`
-            });
-        }
-
-        const skip = (page - 1) * limit;
-
-        const [users, total] = await queryBuilder
-            .skip(skip)
-            .take(limit)
-            .getManyAndCount();
-
-        return {
-            users,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit)
-        }
+    if (username) {
+      queryBuilder.andWhere('user.username LIKE :username', {
+        username: `%${username}%`
+      });
     }
+
+    if (email) {
+      queryBuilder.andWhere('user.email LIKE :email', {
+        email: `%${email}%`
+      });
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      users,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    }
+  }
 
 }

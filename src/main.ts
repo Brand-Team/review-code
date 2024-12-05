@@ -6,7 +6,7 @@ import { CustomExceptionFilter } from './filters/custom-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn']
+    // logger: ['error', 'warn']
   });
   const httpAdapterHost = app.get(HttpAdapterHost)
 
@@ -32,18 +32,18 @@ async function bootstrap() {
     .addTag('CMS')
     .addBearerAuth(
       {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
       },
       'access-token',
     )
     .build();
-  
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  await app.listen(3000);
+  await app.listen(3001);
 }
 
 bootstrap();
